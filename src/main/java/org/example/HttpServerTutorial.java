@@ -20,8 +20,6 @@ public class HttpServerTutorial {
         httpServer.createContext("/home", new RequestHandler());
         httpServer.start();
         System.out.println("Server started, listening at: " + addr);
-
-
     }
 
     private static class RequestHandler implements HttpHandler {
@@ -37,14 +35,16 @@ public class HttpServerTutorial {
                 }
                 int gameNumber = 5;
 
-
                 System.out.println(userGuess);
                 System.out.println(parameters);
                 System.out.println(exchange.getRequestURI());
 
-                String response = guessNumber(userGuess, gameNumber);
 
-                exchange.sendResponseHeaders(200, response.length());
+                Response result = guessNumber(userGuess, gameNumber);
+
+                String response = result.message();
+
+                exchange.sendResponseHeaders(result.status(), response.length());
 
                 try (OutputStream responseBody = exchange.getResponseBody()) {
                     responseBody.write(response.getBytes());
@@ -65,26 +65,27 @@ public class HttpServerTutorial {
         return result;
     }
 
-    public static String guessNumber(String userGuess, int gameNumber) {
+    public static Response guessNumber(String userGuess, int gameNumber) {
+
         try {
             int guessNumber = Integer.parseInt(userGuess);
             if (guessNumber < 1 || guessNumber > 100) {
-                return "The number is out of range, please guess a number between 0 and 100!";
+                return new Response(400, "The number is out of range, please guess a number between 0 and 100!");
             } else if (gameNumber > guessNumber) {
-                return "The correct number is bigger. Guess again!";
+                return new Response(200, "The correct number is bigger. Guess again!");
             } else if (gameNumber < guessNumber) {
-                return "The correct number is smaller. Guess again!";
+                return new Response(200, "The correct number is smaller. Guess again!");
             } else {
-                return "You guessed correctly, you are the master!";
+                return new Response(200, "You guessed correctly, you are the master!");
             }
 
         } catch (NumberFormatException e) {
             if (userGuess.equals("")) {
-                return "Welcome to the numbers game!\n" + "I have generated a random number from 1 to 100.\n" + "Guess the number.";
+                return new Response(200, "Welcome to the numbers game!\n" + "I have generated a random number from 1 to 100.\n" + "Guess the number.");
             } else if (userGuess.equals("exit")) {
-                return "Pity to see you going, see you soon!";
+                return new Response(200, "Pity to see you going, see you soon!");
             } else {
-                return "Bad input, try Again.";
+                return new Response(400, "Bad input, try Again.");
             }
         }
     }
