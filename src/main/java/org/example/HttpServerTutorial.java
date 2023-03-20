@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 
-public class HttpServerTutorial  {
+public class HttpServerTutorial {
     public static void main(String[] args) throws IOException {
         InetSocketAddress addr = new InetSocketAddress("localhost", 5555);
         HttpServer httpServer = HttpServer.create(addr, 0);
@@ -31,13 +31,19 @@ public class HttpServerTutorial  {
             if ("GET".equals(exchange.getRequestMethod())) {
                 String query = exchange.getRequestURI().getQuery();
                 Map<String, String> parameters = mapQuery(query);
+                String userGuess = "";
+                if (parameters != null) {
+                    userGuess = parameters.get("userGuess");
+                }
+                int gameNumber = 5;
 
+
+                System.out.println(userGuess);
                 System.out.println(parameters);
                 System.out.println(exchange.getRequestURI());
 
-                String response = "Welcome to the numbers game!\n" +
-                        "I have generated a random number from 1 to 100.\n" +
-                        "Guess the number.";
+                String response = guessNumber(userGuess, gameNumber);
+
                 exchange.sendResponseHeaders(200, response.length());
 
                 try (OutputStream responseBody = exchange.getResponseBody()) {
@@ -59,28 +65,26 @@ public class HttpServerTutorial  {
         return result;
     }
 
-    public String guessNumber() {
-        int randomNumber = (int) (Math.random() * 100) + 1;
-        System.out.println("Guess a random number from 1 to 100 or type exit to stop");
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            if (scanner.hasNextInt()) {
-                int userGuess = scanner.nextInt();
-                if (userGuess < 1 || userGuess > 100) {
-                    System.out.println("The number is out of range, please guess a number between 0 and 100!");
-                } else if (randomNumber > userGuess) {
-                    System.out.println("The correct number is bigger. Guess again!");
-                } else if (randomNumber < userGuess) {
-                    System.out.println("The correct number is smaller. Guess again!");
-                } else {
-                    System.out.println("You guessed correctly, you are the master!");
-                    return null;
-                }
-            } else if (scanner.next().equals("exit")) {
-                System.out.println("Pity to see you going, see you soon!");
-                return null;
+    public static String guessNumber(String userGuess, int gameNumber) {
+        try {
+            int guessNumber = Integer.parseInt(userGuess);
+            if (guessNumber < 1 || guessNumber > 100) {
+                return "The number is out of range, please guess a number between 0 and 100!";
+            } else if (gameNumber > guessNumber) {
+                return "The correct number is bigger. Guess again!";
+            } else if (gameNumber < guessNumber) {
+                return "The correct number is smaller. Guess again!";
             } else {
-                System.out.println("Bad input, try Again.");
+                return "You guessed correctly, you are the master!";
+            }
+
+        } catch (NumberFormatException e) {
+            if (userGuess.equals("")) {
+                return "Welcome to the numbers game!\n" + "I have generated a random number from 1 to 100.\n" + "Guess the number.";
+            } else if (userGuess.equals("exit")) {
+                return "Pity to see you going, see you soon!";
+            } else {
+                return "Bad input, try Again.";
             }
         }
     }
