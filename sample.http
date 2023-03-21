@@ -1,0 +1,15 @@
+#Welcome to the numbers game!
+#I have generated a random number from 1 to 100.
+#Guess the number.
+
+### START THE GAME
+GET http://127.0.0.1:5555/numbers-game
+
+### Send POST request with json body
+POST http://127.0.0.1:5555/numbers-game
+Content-Type: application/json
+
+{
+  "id": 999,
+  "value": "content"
+}

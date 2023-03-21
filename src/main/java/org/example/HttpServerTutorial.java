@@ -7,19 +7,24 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
 
 public class HttpServerTutorial {
+
+    private static final int randomNumber = (int) (Math.random() * 100) + 1;
+
     public static void main(String[] args) throws IOException {
         InetSocketAddress addr = new InetSocketAddress("localhost", 5555);
         HttpServer httpServer = HttpServer.create(addr, 0);
         httpServer.createContext("/numbers-game", new RequestHandler());
-        httpServer.createContext("/home", new RequestHandler());
         httpServer.start();
         System.out.println("Server started, listening at: " + addr);
+
+
     }
 
     private static class RequestHandler implements HttpHandler {
@@ -29,21 +34,19 @@ public class HttpServerTutorial {
             if ("GET".equals(exchange.getRequestMethod())) {
                 String query = exchange.getRequestURI().getQuery();
                 Map<String, String> parameters = mapQuery(query);
+
                 String userGuess = "";
                 if (parameters != null) {
                     userGuess = parameters.get("userGuess");
                 }
-                int gameNumber = 5;
 
-                System.out.println(userGuess);
-                System.out.println(parameters);
-                System.out.println(exchange.getRequestURI());
-
-
-                Response result = guessNumber(userGuess, gameNumber);
+                Response result = guessNumber(userGuess, randomNumber);
+                System.out.println("Time: " + LocalTime.now()
+                        + " Request Method: GET"
+                        + " Request URL: " + exchange.getRequestURI().toString()
+                        + " Status Code: " + result.status());
 
                 String response = result.message();
-
                 exchange.sendResponseHeaders(result.status(), response.length());
 
                 try (OutputStream responseBody = exchange.getResponseBody()) {
@@ -66,7 +69,6 @@ public class HttpServerTutorial {
     }
 
     public static Response guessNumber(String userGuess, int gameNumber) {
-
         try {
             int guessNumber = Integer.parseInt(userGuess);
             if (guessNumber < 1 || guessNumber > 100) {
