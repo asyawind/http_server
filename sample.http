@@ -1,15 +1,24 @@
-#Welcome to the numbers game!
-#I have generated a random number from 1 to 100.
-#Guess the number.
+### Check server status - optional
+GET http://localhost:5555/status
 
-### START THE GAME
-GET http://127.0.0.1:5555/numbers-game
 
-### Send POST request with json body
-POST http://127.0.0.1:5555/numbers-game
+### Start "Guess number" game
+# - generates number to guess
+# 400 - if game is already started
+POST http://localhost:5555/start-game
+
+### Guess number 1..100
+# 400 - if out of range
+# 400 - if not number
+# returns LESS|EQUAL|BIGGER
+POST http://localhost:5555/guess
 Content-Type: application/json
 
-{
-  "id": 999,
-  "value": "content"
-}
+42
+
+### End "Guess number" game
+# - forgets number to guess
+# 400 - if game already ended
+POST http://localhost:5555/end-game
+
+###
