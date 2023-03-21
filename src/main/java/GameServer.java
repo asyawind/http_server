@@ -1,5 +1,3 @@
-package org.example;
-
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -7,15 +5,16 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.time.LocalTime;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 
-public class HttpServerTutorial {
+public class GameServer {
 
     private static final int randomNumber = (int) (Math.random() * 100) + 1;
     private static boolean hasGameStarted = false;
+
     private enum Result {LESS, EQUAL, BIGGER}
 
     public static void main(String[] args) throws IOException {
@@ -31,30 +30,52 @@ public class HttpServerTutorial {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             switch (exchange.getRequestURI().getPath()) {
+                case "/status" -> {
+                    switch (exchange.getRequestMethod()) {
+                        case "GET" -> handleStatusRequest(exchange);
+                        default -> handleNotFound(exchange);
+                    }
+                }
                 case "/start-game" -> {
                     switch (exchange.getRequestMethod()) {
                         case "POST" -> handleStartRequest(exchange);
                         default -> handleNotFound(exchange);
                     }
                 }
-
                 case "/guess" -> {
                     switch (exchange.getRequestMethod()) {
                         case "POST" -> handleGuessRequest(exchange);
                         default -> handleNotFound(exchange);
                     }
                 }
-
                 case "/end-game" -> {
                     switch (exchange.getRequestMethod()) {
                         case "POST" -> handleEndRequest(exchange);
                         default -> handleNotFound(exchange);
                     }
                 }
-
                 default -> handleNotFound(exchange);
             }
             System.out.println(exchange.getRequestMethod() + " " + exchange.getRequestURI() + " " + exchange.getResponseCode());
+        }
+    }
+
+    private static void handleStatusRequest(HttpExchange exchange) throws IOException {
+        String response;
+        int status = 200;
+
+        if (hasGameStarted) {
+            response = "true";
+
+        } else {
+            response = "false";
+        }
+
+        exchange.sendResponseHeaders(status, response.length());
+
+        try (OutputStream responseBody = exchange.getResponseBody()) {
+            responseBody.write(response.getBytes());
+            exchange.close();
         }
     }
 
@@ -81,7 +102,7 @@ public class HttpServerTutorial {
     }
 
     private static void handleGuessRequest(HttpExchange exchange) throws IOException {
-        String userGuess = exchange.getRequestBody().toString();
+        String userGuess = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         System.out.println(userGuess);
 
         Response result = guessNumber(userGuess, randomNumber);
@@ -130,6 +151,7 @@ public class HttpServerTutorial {
             } else if (gameNumber < guessNumber) {
                 return new Response(200, Result.LESS.toString());
             } else {
+                hasGameStarted = false;
                 return new Response(200, Result.EQUAL.toString());
             }
 
