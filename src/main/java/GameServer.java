@@ -6,16 +6,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class GameServer {
 
-    private static final int randomNumber = (int) (Math.random() * 100) + 1;
+    private static int randomNumber = 0;
     private static boolean hasGameStarted = false;
 
-    private enum Result {LESS, EQUAL, BIGGER}
+    private enum Result {LESS, EQUAL, BIGGER, OUT_OF_RANGE, NOT_NUMBER}
 
     public static void main(String[] args) throws IOException {
         InetSocketAddress addr = new InetSocketAddress("localhost", 5555);
@@ -29,31 +27,13 @@ public class GameServer {
 
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            switch (exchange.getRequestURI().getPath()) {
-                case "/status" -> {
-                    switch (exchange.getRequestMethod()) {
-                        case "GET" -> handleStatusRequest(exchange);
-                        default -> handleNotFound(exchange);
-                    }
-                }
-                case "/start-game" -> {
-                    switch (exchange.getRequestMethod()) {
-                        case "POST" -> handleStartRequest(exchange);
-                        default -> handleNotFound(exchange);
-                    }
-                }
-                case "/guess" -> {
-                    switch (exchange.getRequestMethod()) {
-                        case "POST" -> handleGuessRequest(exchange);
-                        default -> handleNotFound(exchange);
-                    }
-                }
-                case "/end-game" -> {
-                    switch (exchange.getRequestMethod()) {
-                        case "POST" -> handleEndRequest(exchange);
-                        default -> handleNotFound(exchange);
-                    }
-                }
+            String requestAndPath = exchange.getRequestMethod() + " " + exchange.getRequestURI().getPath();
+
+            switch (requestAndPath) {
+                case ("GET /status") -> handleStatusRequest(exchange);
+                case ("POST /start-game") -> handleStartRequest(exchange);
+                case ("POST /guess") -> handleGuessRequest(exchange);
+                case ("POST /end-game") -> handleEndRequest(exchange);
                 default -> handleNotFound(exchange);
             }
             System.out.println(exchange.getRequestMethod() + " " + exchange.getRequestURI() + " " + exchange.getResponseCode());
@@ -85,6 +65,7 @@ public class GameServer {
 
         if (!hasGameStarted) {
             hasGameStarted = true;
+            randomNumber = (int) (Math.random() * 100) + 1;
             response = "New game started.";
             status = 200;
 
@@ -121,6 +102,7 @@ public class GameServer {
 
         if (hasGameStarted) {
             hasGameStarted = false;
+            randomNumber = 0;
             response = "Game ended.";
             status = 200;
         } else {
@@ -145,7 +127,7 @@ public class GameServer {
         try {
             int guessNumber = Integer.parseInt(userGuess);
             if (guessNumber < 1 || guessNumber > 100) {
-                return new Response(400, "The number is out of range, please guess a number between 0 and 100!");
+                return new Response(400, Result.OUT_OF_RANGE.toString());
             } else if (gameNumber > guessNumber) {
                 return new Response(200, Result.BIGGER.toString());
             } else if (gameNumber < guessNumber) {
@@ -154,27 +136,8 @@ public class GameServer {
                 hasGameStarted = false;
                 return new Response(200, Result.EQUAL.toString());
             }
-
         } catch (NumberFormatException e) {
-            if (userGuess.equals("")) {
-                return new Response(200, "Welcome to the numbers game!\n" + "I have generated a random number from 1 to 100.\n" + "Guess the number.");
-            } else if (userGuess.equals("exit")) {
-                return new Response(200, "Pity to see you going, see you soon!");
-            } else {
-                return new Response(400, "Bad input, try Again.");
-            }
+            return new Response(400, Result.NOT_NUMBER.toString());
         }
-    }
-
-    public static Map<String, String> mapQuery(String query) {
-        if (query == null) {
-            return null;
-        }
-        String[] parameters = query.split("&");
-        Map<String, String> result = new HashMap<>();
-        for (String parameter : parameters) {
-            result.put(parameter.split("=")[0], parameter.split("=")[1]);
-        }
-        return result;
     }
 }
