@@ -6,6 +6,8 @@ import java.net.http.HttpResponse;
 import java.util.Scanner;
 
 public class GameClient {
+    private static String baseURI = "http://10.10.10.156:5555";
+
     public static void main(String[] args) throws IOException, InterruptedException {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Welcome to the numbers game!\n"
@@ -21,22 +23,20 @@ public class GameClient {
                 endGame();
                 System.out.println("Thank you for playing, see you soon!");
             } else {
-                switch (guessGame(userInput)) {
+                String response = guessGame(userInput);
+                switch (response) {
                     case "LESS" -> {
-                        System.out.println("Number to guess is smaller than your guess.");
+                        System.out.println("Number to guess is bigger than your guess.");
                     }
                     case "EQUAL" -> {
                         System.out.println("Congratulations you guessed the number.");
                         System.out.println("The game has ended.");
                     }
                     case "BIGGER" -> {
-                        System.out.println("Number to guess is bigger than your guess.");
+                        System.out.println("Number to guess is smaller than your guess.");
                     }
-                    case "OUT_OF_RANGE" -> {
-                        System.out.println("The number is out of range, please guess a number between 1 and 100!");
-                    }
-                    case "NOT_NUMBER" -> {
-                        System.out.println("Bad input, try again.");
+                    default -> {
+                        System.out.println(response);
                     }
                 }
             }
@@ -45,7 +45,7 @@ public class GameClient {
     }
 
     public static boolean gameStatus() throws IOException, InterruptedException {
-        URI HTTP_SERVER_URI = URI.create("http://localhost:5555/status");
+        URI HTTP_SERVER_URI = URI.create(baseURI + "/status");
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
@@ -56,7 +56,7 @@ public class GameClient {
     }
 
     public static void startGame() throws IOException, InterruptedException {
-        URI HTTP_SERVER_URI = URI.create("http://localhost:5555/start-game");
+        URI HTTP_SERVER_URI = URI.create(baseURI + "/start-game");
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.noBody())
@@ -66,7 +66,7 @@ public class GameClient {
     }
 
     public static String guessGame(String userInput) throws IOException, InterruptedException {
-        URI HTTP_SERVER_URI = URI.create("http://localhost:5555/guess");
+        URI HTTP_SERVER_URI = URI.create(baseURI + "/guess");
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(userInput))
@@ -77,7 +77,7 @@ public class GameClient {
     }
 
     public static void endGame() throws IOException, InterruptedException {
-        URI HTTP_SERVER_URI = URI.create("http://localhost:5555/end-game");
+        URI HTTP_SERVER_URI = URI.create(baseURI + "/end-game");
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.noBody())

@@ -2,10 +2,10 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 
 
 public class GameServer {
@@ -13,10 +13,10 @@ public class GameServer {
     private static int randomNumber = 0;
     private static boolean hasGameStarted = false;
 
-    private enum Result {LESS, EQUAL, BIGGER, OUT_OF_RANGE, NOT_NUMBER}
+    private enum Result {LESS, EQUAL, BIGGER}
 
     public static void main(String[] args) throws IOException {
-        InetSocketAddress addr = new InetSocketAddress("localhost", 5555);
+        InetSocketAddress addr = new InetSocketAddress("10.10.10.80", 5555);
         HttpServer httpServer = HttpServer.create(addr, 0);
         httpServer.createContext("/", new RequestHandler());
         httpServer.start();
@@ -29,14 +29,18 @@ public class GameServer {
         public void handle(HttpExchange exchange) throws IOException {
             String requestAndPath = exchange.getRequestMethod() + " " + exchange.getRequestURI().getPath();
 
-            switch (requestAndPath) {
-                case ("GET /status") -> handleStatusRequest(exchange);
-                case ("POST /start-game") -> handleStartRequest(exchange);
-                case ("POST /guess") -> handleGuessRequest(exchange);
-                case ("POST /end-game") -> handleEndRequest(exchange);
-                default -> handleNotFound(exchange);
+            try {
+                switch (requestAndPath) {
+                    case ("GET /status") -> handleStatusRequest(exchange);
+                    case ("POST /start-game") -> handleStartRequest(exchange);
+                    case ("POST /guess") -> handleGuessRequest(exchange);
+                    case ("POST /end-game") -> handleEndRequest(exchange);
+                    default -> handleNotFound(exchange);
+                }
+            } catch (Exception exception) {
+                System.out.println(exception.getStackTrace());
             }
-            System.out.println(exchange.getRequestMethod() + " " + exchange.getRequestURI() + " " + exchange.getResponseCode());
+            System.out.println(Instant.now() + " " + exchange.getRequestMethod() + " " + exchange.getRequestURI() + " " + exchange.getResponseCode());
         }
     }
 
@@ -83,6 +87,7 @@ public class GameServer {
     }
 
     private static void handleGuessRequest(HttpExchange exchange) throws IOException {
+
         String userGuess = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         System.out.println(userGuess);
 
@@ -127,17 +132,17 @@ public class GameServer {
         try {
             int guessNumber = Integer.parseInt(userGuess);
             if (guessNumber < 1 || guessNumber > 100) {
-                return new Response(400, Result.OUT_OF_RANGE.toString());
-            } else if (gameNumber > guessNumber) {
-                return new Response(200, Result.BIGGER.toString());
+                return new Response(400, "The number is out of range, please guess a number between 1 and 100!");
             } else if (gameNumber < guessNumber) {
+                return new Response(200, Result.BIGGER.toString());
+            } else if (gameNumber > guessNumber) {
                 return new Response(200, Result.LESS.toString());
             } else {
                 hasGameStarted = false;
                 return new Response(200, Result.EQUAL.toString());
             }
         } catch (NumberFormatException e) {
-            return new Response(400, Result.NOT_NUMBER.toString());
+            return new Response(400, "Bad input, try again.");
         }
     }
 }
