@@ -6,6 +6,11 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 
 
 public class GameServer {
@@ -40,7 +45,8 @@ public class GameServer {
             } catch (Exception exception) {
                 System.out.println(exception.getStackTrace());
             }
-            System.out.println(Instant.now() + " " + exchange.getRequestMethod() + " " + exchange.getRequestURI() + " " + exchange.getResponseCode());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            System.out.println(formatter.format(LocalDateTime.now()) + " " + exchange.getRequestMethod() + " " + exchange.getRequestURI() + " " + exchange.getResponseCode());
         }
     }
 

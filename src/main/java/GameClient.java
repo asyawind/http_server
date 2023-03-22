@@ -6,7 +6,8 @@ import java.net.http.HttpResponse;
 import java.util.Scanner;
 
 public class GameClient {
-    private static String baseURI = "http://10.10.10.156:5555";
+//    private static String baseURI = "http://10.10.10.156:5555";
+    private static String baseURI = "http://10.10.10.80:5555";
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Scanner scanner = new Scanner(System.in);
