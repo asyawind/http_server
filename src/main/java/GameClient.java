@@ -7,7 +7,8 @@ import java.util.Scanner;
 
 public class GameClient {
 //    private static String baseURI = "http://10.10.10.156:5555";
-    private static String baseURI = "http://10.10.10.80:5555";
+    private static String baseURI = "http://10.10.10.25:5555";
+//    private static String baseURI = "http://10.10.10.80:5555";
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Scanner scanner = new Scanner(System.in);
@@ -19,10 +20,11 @@ public class GameClient {
         String userInput = scanner.nextLine();
         startGame();
 
-        while (gameStatus()) {
+        loop: while (true) {
             if (userInput.equals("exit")) {
                 endGame();
                 System.out.println("Thank you for playing, see you soon!");
+                break loop;
             } else {
                 String response = guessGame(userInput);
                 switch (response) {
@@ -32,6 +34,7 @@ public class GameClient {
                     case "EQUAL" -> {
                         System.out.println("Congratulations you guessed the number.");
                         System.out.println("The game has ended.");
+                        break loop;
                     }
                     case "BIGGER" -> {
                         System.out.println("Number to guess is smaller than your guess.");

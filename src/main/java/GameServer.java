@@ -2,18 +2,18 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
+import java.util.Arrays;
 
 
 public class GameServer {
+
+    GameServer gameServer = new GameServer();
 
     private static int randomNumber = 0;
     private static boolean hasGameStarted = false;
@@ -21,7 +21,7 @@ public class GameServer {
     private enum Result {LESS, EQUAL, BIGGER}
 
     public static void main(String[] args) throws IOException {
-        InetSocketAddress addr = new InetSocketAddress("10.10.10.80", 5555);
+        InetSocketAddress addr = new InetSocketAddress("0.0.0.0", 5555);
         HttpServer httpServer = HttpServer.create(addr, 0);
         httpServer.createContext("/", new RequestHandler());
         httpServer.start();
@@ -43,10 +43,13 @@ public class GameServer {
                     default -> handleNotFound(exchange);
                 }
             } catch (Exception exception) {
-                System.out.println(exception.getStackTrace());
+                System.out.println(Arrays.toString(exception.getStackTrace()));
             }
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-            System.out.println(formatter.format(LocalDateTime.now()) + " " + exchange.getRequestMethod() + " " + exchange.getRequestURI() + " " + exchange.getResponseCode());
+            System.out.println(formatter.format(LocalDateTime.now()) + " "
+                    + exchange.getRequestMethod() + " "
+                    + exchange.getRequestURI() + " "
+                    + exchange.getResponseCode());
         }
     }
 
@@ -95,7 +98,7 @@ public class GameServer {
     private static void handleGuessRequest(HttpExchange exchange) throws IOException {
 
         String userGuess = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-        System.out.println(userGuess);
+        System.out.println("User input: " + userGuess);
 
         Response result = guessNumber(userGuess, randomNumber);
         String response = result.message();
