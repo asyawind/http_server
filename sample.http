@@ -1,5 +1,9 @@
-### Check server status - optional
+### Check server status
 GET http://localhost:5555/status
+
+### Check server stats
+GET http://localhost:5555/stats
+
 
 
 ### Start "Guess number" game

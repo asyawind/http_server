@@ -13,8 +13,6 @@ import java.util.Arrays;
 
 public class GameServer {
 
-    GameServer gameServer = new GameServer();
-
     private static int randomNumber = 0;
     private static boolean hasGameStarted = false;
 
@@ -40,6 +38,7 @@ public class GameServer {
                     case ("POST /start-game") -> handleStartRequest(exchange);
                     case ("POST /guess") -> handleGuessRequest(exchange);
                     case ("POST /end-game") -> handleEndRequest(exchange);
+                    case ("GET /stats") -> handleStatsRequest(exchange);
                     default -> handleNotFound(exchange);
                 }
             } catch (Exception exception) {
@@ -50,6 +49,16 @@ public class GameServer {
                     + exchange.getRequestMethod() + " "
                     + exchange.getRequestURI() + " "
                     + exchange.getResponseCode());
+        }
+    }
+
+    private static void handleStatsRequest(HttpExchange exchange) throws IOException {
+        String response = "Stats information under construction.";
+        exchange.sendResponseHeaders(200, response.length());
+
+        try (OutputStream responseBody = exchange.getResponseBody()) {
+            responseBody.write(response.getBytes());
+            exchange.close();
         }
     }
 
@@ -154,4 +163,6 @@ public class GameServer {
             return new Response(400, "Bad input, try again.");
         }
     }
+
+
 }
