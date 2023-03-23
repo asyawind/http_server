@@ -6,8 +6,8 @@ import java.net.http.HttpResponse;
 import java.util.Scanner;
 
 public class GameClient {
-    //    private static String baseURI = "http://10.10.10.25:5555";    // Mairold
-    //    private static String baseURI = "http://10.10.10.156:5555"; //Kristjan
+//        private static String baseURI = "http://10.10.10.25:5555";    // Mairold&Janeli
+//        private static String baseURI = "http://10.10.10.156:5555"; //Kristjan&Soren
     private static String baseURI = "http://10.10.10.80:5555";
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -15,6 +15,7 @@ public class GameClient {
         System.out.println("Welcome to the numbers game!\n"
                 + "Your goal is to guess the number from 1 to 100.\n"
                 + "Write 'exit' to quit the game.\n"
+                + "Write 'stats' to see your game statistics.\n"
                 + "Guess the number:");
 
         String userInput = scanner.nextLine();
@@ -22,10 +23,12 @@ public class GameClient {
 
         loop:
         while (true) {
-            if (userInput.equals("exit")) {
+            if (userInput.equalsIgnoreCase("EXIT")) {
                 endGame();
                 System.out.println("Thank you for playing, see you soon!");
                 break loop;
+            } else if (userInput.equalsIgnoreCase("STATS")) {
+                System.out.println(gameStats());
             } else {
                 String response = guessGame(userInput);
                 switch (response) {

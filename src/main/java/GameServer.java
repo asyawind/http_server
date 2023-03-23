@@ -9,12 +9,18 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class GameServer {
 
     private static int randomNumber = 0;
     private static boolean hasGameStarted = false;
+    private static int guessCount = 0;
+    private static int gameCount = 0;
+
+//    private static Map<Integer, GameStats> statistics = new HashMap();
 
     private enum Result {LESS, EQUAL, BIGGER}
 
@@ -52,8 +58,14 @@ public class GameServer {
         }
     }
 
+//    public record GameStats(String status, int guessCount) {
+//
+//    }
+
     private static void handleStatsRequest(HttpExchange exchange) throws IOException {
-        String response = "Stats information under construction.";
+        String response = "Statistics:\n" +
+                "Game count: " + gameCount + "\n" +
+                "Total guess count: " + guessCount + "\n";
         exchange.sendResponseHeaders(200, response.length());
 
         try (OutputStream responseBody = exchange.getResponseBody()) {
@@ -90,6 +102,7 @@ public class GameServer {
             randomNumber = (int) (Math.random() * 100) + 1;
             response = "New game started.";
             status = 200;
+            gameCount++;
 
         } else {
             response = "Game already running.";
@@ -108,7 +121,6 @@ public class GameServer {
 
         String userGuess = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         System.out.println("User input: " + userGuess);
-
         Response result = guessNumber(userGuess, randomNumber);
         String response = result.message();
         exchange.sendResponseHeaders(result.status(), response.length());
@@ -147,22 +159,26 @@ public class GameServer {
     }
 
     public static Response guessNumber(String userGuess, int gameNumber) {
-        try {
-            int guessNumber = Integer.parseInt(userGuess);
-            if (guessNumber < 1 || guessNumber > 100) {
-                return new Response(400, "The number is out of range, please guess a number between 1 and 100!");
-            } else if (gameNumber < guessNumber) {
-                return new Response(200, Result.BIGGER.toString());
-            } else if (gameNumber > guessNumber) {
-                return new Response(200, Result.LESS.toString());
-            } else {
-                hasGameStarted = false;
-                return new Response(200, Result.EQUAL.toString());
+        if (hasGameStarted) {
+            guessCount++;
+            try {
+                int guessNumber = Integer.parseInt(userGuess);
+                if (guessNumber < 1 || guessNumber > 100) {
+                    return new Response(400, "The number is out of range, please guess a number between 1 and 100!");
+                } else if (gameNumber < guessNumber) {
+                    return new Response(200, Result.BIGGER.toString());
+                } else if (gameNumber > guessNumber) {
+                    return new Response(200, Result.LESS.toString());
+                } else {
+                    hasGameStarted = false;
+
+                    return new Response(200, Result.EQUAL.toString());
+                }
+            } catch (NumberFormatException e) {
+                return new Response(400, "Bad input, try again.");
             }
-        } catch (NumberFormatException e) {
-            return new Response(400, "Bad input, try again.");
+        } else {
+            return new Response(400, "No active game running!");
         }
     }
-
-
 }
